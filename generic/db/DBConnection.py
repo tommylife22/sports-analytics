@@ -241,3 +241,56 @@ def upsert_via_staging(
         dropped = True
 
     return {"staging_table": staging_table, "dropped": dropped}
+
+def generate_create_sqlserver(df, table_name, schema="dbo", primary_keys=None):
+    """
+    Generate a SQL Server CREATE TABLE statement from a Pandas DataFrame.
+    """
+
+    # SQL Server dtype mapping
+    dtype_mapping = {
+        "object": "VARCHAR(255)",
+        "int64": "INT",
+        "int32": "INT",
+        "float64": "DECIMAL(19,4)",
+        "float32": "DECIMAL(19,4)",
+        "bool": "BIT",
+        "datetime64": "DATETIME",
+        "datetime64[ns]": "DATETIME2",
+        "datetime64[ns, UTC]": "DATETIME2",
+    }
+
+    # Build column definitions
+    col_defs = []
+    for col in df.columns:
+        pd_type = str(df[col].dtype)
+        sql_type = dtype_mapping.get(pd_type, "NVARCHAR(255)")
+        col_defs.append(f"    [{col}] {sql_type}")
+
+    # Add timestamp columns at the end
+    col_defs.append("    [insert_date] DATETIME DEFAULT GETDATE()")
+    col_defs.append("    [update_date] DATETIME DEFAULT GETDATE()")
+
+    # Join with newlines
+    col_defs_sql = ",\n".join(col_defs)
+
+    # Primary key clause
+    if primary_keys:
+        if isinstance(primary_keys, str):
+            pk_cols = f"[{primary_keys}]"
+        else:
+            pk_cols = ", ".join(f"[{pk}]" for pk in primary_keys)
+
+        pk_clause = f",\n    CONSTRAINT PK_{table_name} PRIMARY KEY ({pk_cols})"
+    else:
+        pk_clause = ""
+
+    # Final statement
+    create_stmt = (
+        f"CREATE TABLE [{schema}].[{table_name}] (\n"
+        f"{col_defs_sql}"
+        f"{pk_clause}\n"
+        ");"
+    )
+
+    return print(create_stmt)
