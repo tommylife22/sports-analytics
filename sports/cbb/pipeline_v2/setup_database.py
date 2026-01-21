@@ -1,6 +1,6 @@
 """
 Database Setup and Migration Script
-Sets up CBB_V2 database schema and optionally migrates data from old database
+Sets up cbb database schema in dbo and optionally migrates data from old database
 """
 import sys
 import os
@@ -20,39 +20,6 @@ def read_schema_file(schema_file):
     """Read SQL schema file"""
     with open(schema_file, 'r') as f:
         return f.read()
-
-
-def create_database_if_not_exists(server, username, password, database_name):
-    """
-    Create a new database if it doesn't exist
-    
-    Args:
-        server (str): SQL Server name
-        username (str): Username
-        password (str): Password
-        database_name (str): Database name to create
-    """
-    from urllib.parse import quote_plus
-    from sqlalchemy import create_engine, text
-    
-    # Connect to master to create new database
-    connection_string = f"mssql+pyodbc://{username}:{quote_plus(password)}@{server}/master?driver=ODBC+Driver+17+for+SQL+Server"
-    engine = create_engine(connection_string)
-    
-    with engine.connect() as conn:
-        # Check if database exists
-        check_db = f"SELECT database_id FROM sys.databases WHERE name = '{database_name}'"
-        result = conn.execute(text(check_db))
-        
-        if result.fetchone() is None:
-            print(f"✓ Creating database: {database_name}")
-            conn.execute(text(f"CREATE DATABASE [{database_name}]"))
-            conn.commit()
-            print(f"✓ Database created successfully")
-        else:
-            print(f"ℹ Database {database_name} already exists")
-    
-    engine.dispose()
 
 
 def execute_schema_script(engine, schema_file):
@@ -84,7 +51,7 @@ def execute_schema_script(engine, schema_file):
 
 def migrate_old_data(old_engine, new_engine):
     """
-    Migrate data from old CBB database to new CBB_V2 database
+    Migrate data from old CBB database to new cbb database in dbo schema
     
     Args:
         old_engine: SQLAlchemy engine for old database
@@ -92,49 +59,104 @@ def migrate_old_data(old_engine, new_engine):
     """
     print("\n=== Migrating Data ===")
     
+    # Tables to migrate from [CBB].[dbo] to [cbb].[dbo]
     tables_to_migrate = [
-        ('TeamInfo', 'Team'),
-        ('GameInfo', 'Game'),
-        ('PlayerInfo', 'Player'),
+        'ConferenceInfo',
+        'VenueInfo',
+        'TeamInfo',
+        'PlayerInfo',
+        'GameInfo',
+        'GameBoxscoreTeam',
+        'GameBoxscorePlayer',
+        'GameLines',
     ]
     
-    for old_table, new_table in tables_to_migrate:
+    for table_name in tables_to_migrate:
         try:
-            print(f"\nMigrating {old_table} → {new_table}...")
+            print(f"\nMigrating {table_name}...")
             
-            # Read from old database
-            query = f"SELECT * FROM [CBB].[{old_table}]"
+            # Read from old database (assuming CBB schema in original database)
+            query = f"SELECT * FROM [dbo].[{table_name}]"
             df = pd.read_sql(query, old_engine)
-            print(f"  Read {len(df)} rows from {old_table}")
             
-            # Write to new database
-            df.to_sql(new_table, new_engine, schema='CBB_V2', if_exists='append', index=False)
-            print(f"  ✓ Migrated {len(df)} rows to {new_table}")
+            if len(df) == 0:
+                print(f"  ℹ No data found in {table_name}")
+                continue
+            
+            print(f"  Read {len(df)} rows from {table_name}")
+            
+            # Write to new database in dbo schema
+            df.to_sql(table_name, new_engine, schema='dbo', if_exists='append', index=False)
+            print(f"  ✓ Migrated {len(df)} rows to {table_name}")
             
         except Exception as e:
-            print(f"  ⚠ Migration skipped: {e}")
+            print(f"  ⚠ Migration skipped for {table_name}: {e}")
+
+
+def verify_schema(engine):
+    """Verify that all expected tables were created"""
+    print("\n=== Verifying Schema ===")
+    
+    expected_tables = [
+        'ConferenceInfo',
+        'VenueInfo',
+        'TeamInfo',
+        'PlayerInfo',
+        'GameInfo',
+        'GameBoxscoreTeam',
+        'GameBoxscorePlayer',
+        'GameLines',
+    ]
+    
+    query = """
+    SELECT TABLE_NAME 
+    FROM INFORMATION_SCHEMA.TABLES 
+    WHERE TABLE_SCHEMA = 'dbo' 
+    AND TABLE_NAME IN ('ConferenceInfo', 'VenueInfo', 'TeamInfo', 'PlayerInfo', 
+                       'GameInfo', 'GameBoxscoreTeam', 'GameBoxscorePlayer', 'GameLines')
+    ORDER BY TABLE_NAME
+    """
+    
+    with engine.connect() as conn:
+        result = conn.execute(text(query))
+        created_tables = [row[0] for row in result.fetchall()]
+    
+    print(f"Expected tables: {len(expected_tables)}")
+    print(f"Created tables: {len(created_tables)}")
+    
+    for table in expected_tables:
+        status = "✓" if table in created_tables else "✗"
+        print(f"  {status} {table}")
+    
+    if len(created_tables) == len(expected_tables):
+        print("\n✓ All tables created successfully!")
+        return True
+    else:
+        missing = set(expected_tables) - set(created_tables)
+        print(f"\n✗ Missing tables: {missing}")
+        return False
 
 
 def main():
     """Main setup function"""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Set up CBB_V2 database schema')
+    parser = argparse.ArgumentParser(description='Set up cbb database schema in dbo')
     parser.add_argument('--migrate', action='store_true', help='Migrate data from old CBB database')
     parser.add_argument('--schema-file', default='sports/cbb/pipeline_v2/cbb_v2_schema.sql',
                        help='Path to SQL schema file')
     
     args = parser.parse_args()
     
-    print("=== CBB Pipeline V2 Database Setup ===\n")
+    print("=== CBB Database Setup ===\n")
     
-    # Get database engine
+    # Get database engine for new database
     try:
-        new_engine = get_engine('CBB_V2')
-        print("✓ Connected to CBB_V2 database")
+        new_engine = get_engine('CBB')
+        print("✓ Connected to cbb database")
     except Exception as e:
-        print(f"✗ Failed to connect to CBB_V2: {e}")
-        print("\nNote: Make sure CBB_V2 database exists on your SQL Server")
+        print(f"✗ Failed to connect to cbb database: {e}")
+        print("\nNote: Make sure cbb database exists on your SQL Server")
         print("You may need to create it manually first using SQL Server Management Studio")
         return 1
     
@@ -145,6 +167,12 @@ def main():
         execute_schema_script(new_engine, schema_file)
     except Exception as e:
         print(f"✗ Failed to execute schema: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+    
+    # Verify schema was created
+    if not verify_schema(new_engine):
         return 1
     
     # Optionally migrate old data
@@ -157,7 +185,7 @@ def main():
             print(f"⚠ Migration skipped: {e}")
     
     print("\n=== Setup Complete ===")
-    print("✓ CBB_V2 database schema created")
+    print("✓ cbb database schema created in dbo")
     print("✓ Ready to load data with new pipeline")
     
     return 0

@@ -1,134 +1,221 @@
 # CBB Pipeline V2 Database Setup
 
-This guide walks through setting up the new `CBB_V2` database for the refactored CBB pipeline.
+This guide walks through setting up the new `cbb` database with all pipeline tables.
 
 ## Prerequisites
 
 1. SQL Server with Azure connection configured
-2. `.env` file with connection details
-3. Python environment with dependencies installed
+2. `cbb` database already created
+3. `.env` file with connection details
+4. Python environment with dependencies installed
 
-## Step 1: Create the Database
+## Step 1: Verify Database Exists
 
-First, you need to create the `CBB_V2` database on your SQL Server (manual step):
+Make sure the `cbb` database exists on your SQL Server:
 
-### Option A: Using SQL Server Management Studio
-1. Connect to your Azure SQL Server
-2. Right-click "Databases" → "New Database"
-3. Name it `CBB_V2`
-4. Click "OK"
-
-### Option B: Using SQL Query
 ```sql
-CREATE DATABASE CBB_V2;
+SELECT name FROM sys.databases WHERE name = 'cbb';
+```
+
+If it doesn't exist, create it:
+
+```sql
+CREATE DATABASE cbb;
 ```
 
 ## Step 2: Create Schema and Tables
 
-Run the setup script to create all tables:
+Run the setup script to create all tables in the `dbo` schema:
 
 ```bash
 python sports/cbb/pipeline_v2/setup_database.py
 ```
 
 This will:
-- ✓ Connect to `CBB_V2` database
+- ✓ Connect to `cbb` database
 - ✓ Execute the schema script
-- ✓ Create all tables with relationships
+- ✓ Create all 8 tables in `dbo` schema with relationships
 - ✓ Create indexes for performance
+- ✓ Verify all tables were created
 
 ### Verify Tables Created
 
 ```sql
 SELECT TABLE_NAME 
 FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_SCHEMA = 'CBB_V2'
+WHERE TABLE_SCHEMA = 'dbo' AND TABLE_CATALOG = 'cbb'
 ORDER BY TABLE_NAME;
 ```
 
 Expected tables:
-- `Team` - Team information
-- `Game` - Game data
-- `Player` - Player rosters
-- `TeamBoxscore` - Team game statistics
-- `PlayerBoxscore` - Player game statistics
-- `Conference` - Conference information
+- `ConferenceInfo` - Conference information
+- `VenueInfo` - Venue/arena information
+- `TeamInfo` - Team information
+- `PlayerInfo` - Player rosters
+- `GameInfo` - Game data
+- `GameBoxscoreTeam` - Team game statistics
+- `GameBoxscorePlayer` - Player game statistics
+- `GameLines` - Betting lines
 
 ## Step 3: (Optional) Migrate Old Data
 
-If you want to copy data from the old `CBB` database:
+If you want to copy existing data from the old `cbb` database:
 
 ```bash
 python sports/cbb/pipeline_v2/setup_database.py --migrate
 ```
 
 This will:
-- ✓ Read from old `CBB` database
-- ✓ Write to new `CBB_V2` database
-- ✓ Skip tables that don't exist in old database
-
-## Step 4: Update .env
-
-Add the new database name to your `.env` file:
-
-```env
-CBB_V2_DB=CBB_V2
-```
+- ✓ Read from old `cbb` database tables
+- ✓ Write to new `cbb` database tables
+- ✓ Handle foreign key relationships
+- ✓ Skip empty tables
 
 ## Database Schema
 
-### Team Table
+### ConferenceInfo
 ```
-team_id (PK)           - Team unique identifier
-source_id              - External source ID
-school_name            - Official school name
-team_abbr              - Team abbreviation
+conferenceId (PK)      - Unique identifier
+sourceId               - External API ID
+name                   - Conference name
+abbreviation           - Conference abbreviation
+shortName              - Short conference name
+```
+
+### VenueInfo
+```
+venueId (PK)           - Unique identifier
+sourceId               - External API ID
+name                   - Venue name
+city                   - City
+state                  - State
+country                - Country
+latitude               - Latitude
+longitude              - Longitude
+```
+
+### TeamInfo
+```
+teamId (PK)            - Team unique identifier
+sourceId               - External source ID
+school                 - School name
 mascot                 - Team mascot
-display_name           - Display name
-conference_id          - Conference ID
-conference_name        - Conference name
+abbreviation           - Team abbreviation
+displayName            - Display name
+conferenceId (FK)      - Conference ID
+conference             - Conference name
+currentVenueId (FK)    - Current venue ID
+currentVenue           - Current venue name
+currentCity            - Current city
+currentState           - Current state
 ```
 
-### Game Table
+### PlayerInfo
 ```
-game_id (PK)           - Game unique identifier
-source_id              - External source ID
-season                 - Season year
-season_type            - Regular, Tournament, etc.
-game_date              - Game date/time
-home_team_id (FK)      - Home team ID
-away_team_id (FK)      - Away team ID
-home_points            - Home team score
-away_points            - Away team score
-status                 - Final, Live, Postponed, etc.
-neutral_site           - Boolean
-conference_game        - Boolean
-```
-
-### Player Table
-```
-player_id (PK)         - Player unique identifier
-source_id              - External source ID
-team_id (FK)           - Team ID
+playerId (PK)          - Player unique identifier
+sourceId               - External source ID
+teamId (FK)            - Team ID
 season                 - Season year
 name                   - Full name
-first_name             - First name
-last_name              - Last name
-jersey_number          - Jersey #
-position               - Guard, Forward, Center
-height_inches          - Height in inches
-weight_lbs             - Weight in pounds
-start_season           - First season
-end_season             - Last season
+firstName              - First name
+lastName               - Last name
+jersey                 - Jersey number
+position               - Position
+height                 - Height (inches)
+weight                 - Weight (lbs)
+hometownCity           - Hometown city
+hometownState          - Hometown state
+startSeason            - First season
+endSeason              - Last season
 ```
 
-### Indexes
+### GameInfo
+```
+gameId (PK)            - Game unique identifier
+sourceId               - External source ID
+season                 - Season year
+seasonType             - Regular/Tournament/etc
+startDate              - Game date/time
+homeTeamId (FK)        - Home team ID
+awayTeamId (FK)        - Away team ID
+homePoints             - Home team score
+awayPoints             - Away team score
+status                 - Final/Live/Postponed/etc
+neutralSite            - Boolean
+conferenceGame         - Boolean
+tournament             - Tournament name
+venueId (FK)           - Venue ID
+venue                  - Venue name
+city                   - City
+state                  - State
+```
 
-Performance indexes created on:
-- `Game.season`, `Game.home_team_id`, `Game.away_team_id`, `Game.game_date`
-- `Player.team_id + season`, `Player.season`
-- `TeamBoxscore.game_id + team_id`, `TeamBoxscore.season`
-- `PlayerBoxscore.game_id + player_id`, `PlayerBoxscore.season`, `PlayerBoxscore.team_id`
+### GameBoxscoreTeam
+```
+boxscoreId (PK)        - Auto-incrementing ID
+gameId (FK)            - Game ID
+teamId (FK)            - Team ID
+season                 - Season year
+points                 - Points scored
+fieldGoalsMade         - FG made
+fieldGoalsAttempted    - FG attempted
+threePointersMade      - 3P made
+threePointersAttempted - 3P attempted
+freeThrowsMade         - FT made
+freeThrowsAttempted    - FT attempted
+rebounds               - Rebounds
+assists                - Assists
+turnovers              - Turnovers
+steals                 - Steals
+blocks                 - Blocks
+fouls                  - Fouls
+```
+
+### GameBoxscorePlayer
+```
+boxscoreId (PK)        - Auto-incrementing ID
+gameId (FK)            - Game ID
+playerId (FK)          - Player ID
+teamId (FK)            - Team ID
+season                 - Season year
+points                 - Points scored
+fieldGoalsMade         - FG made
+fieldGoalsAttempted    - FG attempted
+threePointersMade      - 3P made
+threePointersAttempted - 3P attempted
+freeThrowsMade         - FT made
+freeThrowsAttempted    - FT attempted
+rebounds               - Rebounds
+assists                - Assists
+turnovers              - Turnovers
+steals                 - Steals
+blocks                 - Blocks
+fouls                  - Fouls
+minutesPlayed          - Minutes played
+```
+
+### GameLines
+```
+linesId (PK)           - Auto-incrementing ID
+gameId (FK)            - Game ID
+season                 - Season year
+spread                 - Point spread
+overUnder              - Over/under total
+homeMoneyline          - Home moneyline odds
+awayMoneyline          - Away moneyline odds
+homeOdds               - Home odds
+awayOdds               - Away odds
+```
+
+## Indexes Created
+
+Performance indexes on:
+- `TeamInfo.conferenceId`
+- `PlayerInfo.teamId`, `PlayerInfo.season`
+- `GameInfo.season`, `GameInfo.homeTeamId`, `GameInfo.awayTeamId`, `GameInfo.startDate`
+- `GameBoxscoreTeam.gameId`, `GameBoxscoreTeam.teamId`
+- `GameBoxscorePlayer.gameId`, `GameBoxscorePlayer.playerId`, `GameBoxscorePlayer.teamId`
+- `GameLines.gameId`
 
 ## Troubleshooting
 
@@ -136,13 +223,24 @@ Performance indexes created on:
 ```
 Error: mssql+pyodbc connection failed
 ```
-**Solution:** Check `.env` file for correct server name, username, password
+**Solution:** Check `.env` file for correct:
+- `SPORTS_SERVER_NAME` - SQL Server name
+- `AZURE_USERNAME` - Username
+- `AZURE_PASSWORD` - Password
+- `CBB_DB` - Should be "cbb"
 
 ### Table Already Exists
 ```
-Error: ProgrammingError: Table 'Team' already exists
+Error: Table already exists
 ```
-**Solution:** The schema has already been created. Skip this step or drop tables first.
+**Solution:** Either drop tables first or use `--migrate` flag to append
+
+### Foreign Key Constraint Error During Migration
+**Solution:** This means the parent table doesn't have required records. Create parent records first:
+1. `ConferenceInfo`
+2. `VenueInfo`
+3. `TeamInfo`
+4. Then migrate other tables
 
 ### Missing Driver
 ```
@@ -151,7 +249,7 @@ Error: pyodbc.Error: ('IM002', '[IM002]')
 **Solution:** Install ODBC Driver for SQL Server:
 ```bash
 # macOS
-brew install freetds --with-odbc
+brew install freetds
 
 # Windows
 # Download from: https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server
@@ -159,31 +257,23 @@ brew install freetds --with-odbc
 
 ## Next Steps
 
-1. Run the loaders to insert cleaned data
-2. Monitor data quality and relationships
-3. Verify foreign key constraints are working
-4. Set up backup strategy
+1. Run loaders to insert cleaned data
+2. Monitor data quality using queries
+3. Set up automated backups
+4. Create views for common queries
 
 ## Rolling Back
 
-To delete all tables in `CBB_V2`:
+To delete all tables in `dbo` schema:
 
 ```sql
--- Drop foreign keys first
-ALTER TABLE CBB_V2.PlayerBoxscore DROP CONSTRAINT FK_PlayerBoxscore_Game;
-ALTER TABLE CBB_V2.PlayerBoxscore DROP CONSTRAINT FK_PlayerBoxscore_Player;
-ALTER TABLE CBB_V2.PlayerBoxscore DROP CONSTRAINT FK_PlayerBoxscore_Team;
-ALTER TABLE CBB_V2.TeamBoxscore DROP CONSTRAINT FK_TeamBoxscore_Game;
-ALTER TABLE CBB_V2.TeamBoxscore DROP CONSTRAINT FK_TeamBoxscore_Team;
-ALTER TABLE CBB_V2.Game DROP CONSTRAINT FK_Game_HomeTeam;
-ALTER TABLE CBB_V2.Game DROP CONSTRAINT FK_Game_AwayTeam;
-ALTER TABLE CBB_V2.Player DROP CONSTRAINT FK_Player_Team;
-
--- Drop tables
-DROP TABLE CBB_V2.PlayerBoxscore;
-DROP TABLE CBB_V2.TeamBoxscore;
-DROP TABLE CBB_V2.Game;
-DROP TABLE CBB_V2.Player;
-DROP TABLE CBB_V2.Team;
-DROP TABLE CBB_V2.Conference;
+-- Drop tables in reverse dependency order
+DROP TABLE IF EXISTS [dbo].[GameLines];
+DROP TABLE IF EXISTS [dbo].[GameBoxscorePlayer];
+DROP TABLE IF EXISTS [dbo].[GameBoxscoreTeam];
+DROP TABLE IF EXISTS [dbo].[PlayerInfo];
+DROP TABLE IF EXISTS [dbo].[GameInfo];
+DROP TABLE IF EXISTS [dbo].[TeamInfo];
+DROP TABLE IF EXISTS [dbo].[VenueInfo];
+DROP TABLE IF EXISTS [dbo].[ConferenceInfo];
 ```
