@@ -16,3 +16,6 @@ __pycache__/
 
 # Notebooks checkpoints
 .ipynb_checkpoints/
+
+# Git example text
+git_example.txt
