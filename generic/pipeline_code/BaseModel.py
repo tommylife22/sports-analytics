@@ -9,8 +9,8 @@ from sklearn.metrics import (
 )
 import plotly.io as pio
 import optuna
-from pipeline_code.CrossValidation import perform_cross_validation, get_scorer
-from pipeline_code.FeatureImportance import calculate_feature_importance
+from .CrossValidation import perform_cross_validation, get_scorer
+from .FeatureImportance import calculate_feature_importance
 import warnings
 from sklearn.exceptions import ConvergenceWarning
 

@@ -1,10 +1,10 @@
 # RandomForestModel
-from pipeline_code.BaseModel import BaseModel
+from .BaseModel import BaseModel
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 import pandas as pd
 import numpy as np
 import optuna
-from pipeline_code.CrossValidation import perform_cross_validation
+from .CrossValidation import perform_cross_validation
 
 class RandomForestModel(BaseModel):
     def __init__(self, df, target_column, preprocessor=None):

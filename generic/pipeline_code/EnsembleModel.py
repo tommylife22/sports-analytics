@@ -1,6 +1,6 @@
 # EnsembleModel
 
-from pipeline_code.BaseModel import BaseModel
+from .BaseModel import BaseModel
 from sklearn.ensemble import (
     VotingRegressor, 
     VotingClassifier, 

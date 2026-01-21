@@ -49,9 +49,12 @@ def _calculate_xgboost_importance(model, X_train):
     # Store raw gain values for sorting
     raw_gain = [gain_importance.get(f, 0) for f in X_train.columns]
     
-    # Calculate percentage of total gain
+    # Calculate percentage of total gain (handle zero case)
     total_gain = sum(raw_gain)
-    percentages = [(g / total_gain * 100) for g in raw_gain]
+    if total_gain > 0:
+        percentages = [(g / total_gain * 100) for g in raw_gain]
+    else:
+        percentages = [0.0] * len(raw_gain)
     
     # Format gain values for readability
     formatted_gain = [f"{g:,.2f}" if g < 1000 else f"{int(g):,}" for g in raw_gain]
@@ -83,9 +86,12 @@ def _calculate_randomforest_importance(model, X_train):
     # Get feature importance values
     importance_values = model.feature_importances_
     
-    # Calculate percentage of total importance
+    # Calculate percentage of total importance (handle zero case)
     total_importance = importance_values.sum()
-    percentages = [(imp / total_importance * 100) for imp in importance_values]
+    if total_importance > 0:
+        percentages = [(imp / total_importance * 100) for imp in importance_values]
+    else:
+        percentages = [0.0] * len(importance_values)
     
     # Create DataFrame with both raw importance and percentage
     importance_df = pd.DataFrame({
@@ -112,10 +118,13 @@ def _calculate_linear_importance(model, X_train, problem_type):
         # For linear regression, keep the sign of coefficients
         importance = model.coef_
     
-    # Calculate percentage based on absolute values
+    # Calculate percentage based on absolute values (handle zero case)
     abs_importance = np.abs(importance)
     total_abs_importance = abs_importance.sum()
-    percentages = [(abs_imp / total_abs_importance * 100) for abs_imp in abs_importance]
+    if total_abs_importance > 0:
+        percentages = [(abs_imp / total_abs_importance * 100) for abs_imp in abs_importance]
+    else:
+        percentages = [0.0] * len(abs_importance)
         
     importance_df = pd.DataFrame({
         'feature': X_train.columns,
@@ -196,16 +205,19 @@ def _calculate_generic_importance(model, X_train):
         # Models like tree-based models, GradientBoosting, etc.
         importance_values = model.feature_importances_
         
-        # Calculate percentage
+        # Calculate percentage (handle zero case)
         total_importance = importance_values.sum()
-        percentages = [(imp / total_importance * 100) for imp in importance_values]
-        
+        if total_importance > 0:
+            percentages = [(imp / total_importance * 100) for imp in importance_values]
+        else:
+            percentages = [0.0] * len(importance_values)
+
         importance_df = pd.DataFrame({
             'feature': X_train.columns,
             'importance': importance_values.round(6),
             'percent': [f"{p:.2f}%" for p in percentages]
         }).sort_values('importance', ascending=False)
-        
+
         explanation = """
         Generic Feature Importance:
         - importance: The relative importance of each feature
@@ -221,17 +233,20 @@ def _calculate_generic_importance(model, X_train):
             # Binary classification or regression
             importance = model.coef_.flatten()
             
-        # Calculate percentage
+        # Calculate percentage (handle zero case)
         abs_importance = np.abs(importance)
         total_abs_importance = abs_importance.sum()
-        percentages = [(abs_imp / total_abs_importance * 100) for abs_imp in abs_importance]
-        
+        if total_abs_importance > 0:
+            percentages = [(abs_imp / total_abs_importance * 100) for abs_imp in abs_importance]
+        else:
+            percentages = [0.0] * len(abs_importance)
+
         importance_df = pd.DataFrame({
             'feature': X_train.columns,
             'coefficient': importance.round(6),
             'percent': [f"{p:.2f}%" for p in percentages]
         }).sort_values('coefficient', key=abs, ascending=False)
-        
+
         explanation = """
         Coefficient-based Feature Importance:
         - coefficient: Model coefficients (positive/negative shows direction)
@@ -255,10 +270,13 @@ def _calculate_generic_importance(model, X_train):
                                          n_repeats=5, random_state=42)
                 
             importance_values = r.importances_mean
-            
-            # Calculate percentage
+
+            # Calculate percentage (handle zero case)
             total_importance = importance_values.sum()
-            percentages = [(imp / total_importance * 100) for imp in importance_values]
+            if total_importance > 0:
+                percentages = [(imp / total_importance * 100) for imp in importance_values]
+            else:
+                percentages = [0.0] * len(importance_values)
             
             importance_df = pd.DataFrame({
                 'feature': X_train.columns,

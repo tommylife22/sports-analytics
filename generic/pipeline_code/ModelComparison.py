@@ -21,7 +21,7 @@ def compare_model_metrics(models):
 
     # Optional helpers (guarded imports)
     try:
-        from pipeline_code.rocCalculation import plot_roc_curves, add_auc_to_models
+        from .rocCalculation import plot_roc_curves, add_auc_to_models
     except Exception:
         plot_roc_curves = None
         add_auc_to_models = None

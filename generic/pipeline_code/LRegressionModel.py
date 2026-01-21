@@ -1,10 +1,10 @@
 # LRegressionModel
-from pipeline_code.BaseModel import BaseModel
+from .BaseModel import BaseModel
 from sklearn.linear_model import LinearRegression, LogisticRegression
 import pandas as pd
 import numpy as np
 import optuna
-from pipeline_code.CrossValidation import perform_cross_validation
+from .CrossValidation import perform_cross_validation
 
 class LRegressionModel(BaseModel):
     def __init__(self, df, target_column, preprocessor=None):

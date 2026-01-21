@@ -1,9 +1,9 @@
 # Keep your imports at the top
-from pipeline_code.DataPreprocessor import DataPreprocessor
-from pipeline_code.RandomForestModel import RandomForestModel
-from pipeline_code.UnifiedNeuralNetwork import UnifiedNeuralNetwork
-from pipeline_code.LRegressionModel import LRegressionModel
-from pipeline_code.XGBoostModel import XGBoostModel
+from .DataPreprocessor import DataPreprocessor
+from .RandomForestModel import RandomForestModel
+from .UnifiedNeuralNetwork import UnifiedNeuralNetwork
+from .LRegressionModel import LRegressionModel
+from .XGBoostModel import XGBoostModel
 import pandas as pd
 
 def run_ml_pipeline(

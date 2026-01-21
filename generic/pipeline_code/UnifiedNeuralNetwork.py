@@ -1,10 +1,10 @@
 # UnifiedNeuralNetwork
-from pipeline_code.BaseModel import BaseModel
+from .BaseModel import BaseModel
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 import numpy as np
 import pandas as pd
 import optuna
-from pipeline_code.CrossValidation import perform_cross_validation
+from .CrossValidation import perform_cross_validation
 
 class UnifiedNeuralNetwork(BaseModel):
     def __init__(self, df, target_column, preprocessor=None):

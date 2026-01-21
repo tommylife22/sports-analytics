@@ -36,7 +36,7 @@ def create_ensemble_from_models(
         The trained ensemble model
     """
     # Import inside the function to avoid circular imports
-    from pipeline_code.EnsembleModel import EnsembleModel
+    from .EnsembleModel import EnsembleModel
     from PickleModels import save_model
     
     print("🔍 Starting ensemble model creation process")
@@ -93,7 +93,7 @@ def create_ensemble_from_models(
     }
     
     # Display comparison of all models
-    from pipeline_code.ModelMetricDisplays import compare_model_metrics
+    from .ModelMetricDisplays import compare_model_metrics
     compare_model_metrics(all_models)
     
     print("🎉 Ensemble creation complete!")
@@ -130,7 +130,7 @@ def compare_ensemble_types(
         Dictionary containing all ensemble models
     """
     # Import inside the function to avoid circular imports
-    from pipeline_code.EnsembleModel import EnsembleModel
+    from .EnsembleModel import EnsembleModel
     from PickleModels import save_multiple_models
     
     print("🔄 Starting ensemble comparison")
@@ -253,7 +253,7 @@ def compare_ensemble_types(
     all_models = {**models_dict, **ensembles}
     
     # Compare all models
-    from pipeline_code.ModelMetricDisplays import compare_model_metrics
+    from .ModelMetricDisplays import compare_model_metrics
     comparison = compare_model_metrics(all_models)
     
     # Save ensemble models if requested
@@ -285,7 +285,7 @@ def create_boosting_ensemble(df, target_column, base_model, n_estimators=50, lea
         The trained boosting ensemble model
     """
     # Import inside the function to avoid circular imports
-    from pipeline_code.EnsembleModel import EnsembleModel
+    from .EnsembleModel import EnsembleModel
     
     print("🔄 Creating boosting ensemble")
     print(f"📊 Using {base_model.__class__.__name__} as base model")

@@ -137,7 +137,7 @@ def run_model_multiple_times(model_object, n_runs=5, random_seed=42):
                 # Otherwise try direct import
                 else:
                     try:
-                        from pipeline_code.FeatureImportance import calculate_feature_importance
+                        from .FeatureImportance import calculate_feature_importance
                         feature_importance, _ = calculate_feature_importance(
                             model=new_model,
                             X_train=X_train,

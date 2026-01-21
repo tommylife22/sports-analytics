@@ -2,9 +2,9 @@
 # Main module that imports and combines all metric display functionality
 
 # Import all the sub-modules
-from pipeline_code.ClassAnalysis import print_class_characteristics_analysis
-from pipeline_code.ConfusionMatrixAnalysis import print_detailed_confusion_matrix_for_model
-from pipeline_code.ModelComparison import compare_model_metrics
+from .ClassAnalysis import print_class_characteristics_analysis
+from .ConfusionMatrixAnalysis import print_detailed_confusion_matrix_for_model
+from .ModelComparison import compare_model_metrics
 
 def display_predictions_vs_actuals(models):
     """

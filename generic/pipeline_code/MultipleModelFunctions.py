@@ -1,8 +1,8 @@
 # ==============================================================================
 # Correctly import the high-level function from your DataPreprocessor.py module
-from pipeline_code.DataPreprocessor import preprocess_data 
-from pipeline_code.mainMLM import run_ml_pipeline
-from pipeline_code.ModelAveraging import run_model_multiple_times
+from .DataPreprocessor import preprocess_data 
+from .mainMLM import run_ml_pipeline
+from .ModelAveraging import run_model_multiple_times
 
 # ==============================================================================
 # THE MAIN FUNCTION
