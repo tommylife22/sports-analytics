@@ -9,8 +9,17 @@ from sklearn.metrics import (
 )
 import plotly.io as pio
 import optuna
-from .CrossValidation import perform_cross_validation, get_scorer
-from .FeatureImportance import calculate_feature_importance
+
+import sys
+import os
+
+# Add project root to path for generic imports (Jupyter notebook version)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.getcwd(), '..', '..', '..'))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from generic.pipeline_code.CrossValidation import perform_cross_validation, get_scorer
+from generic.pipeline_code.FeatureImportance import calculate_feature_importance
 import warnings
 from sklearn.exceptions import ConvergenceWarning
 

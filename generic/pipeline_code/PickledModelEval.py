@@ -3,7 +3,7 @@
 import pandas as pd
 import numpy as np
 from PickleModels import load_model
-from .DataPreprocessor import DataPreprocessor
+from DataPreprocessor import DataPreprocessor
 
 def evaluate_model(model_path, test_file_path=None, test_df=None, target_column=None, output_file=None, skip_preprocessing=False):
     """

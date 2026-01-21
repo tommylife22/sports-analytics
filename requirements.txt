@@ -16,3 +16,4 @@ tqdm
 beautifulsoup4
 lxml
 mlb-statsapi
+tabulate
