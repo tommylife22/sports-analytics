@@ -85,8 +85,6 @@ def loadTeamInfo(engine,season):
         primary_keys    = pks,
         data_columns    = data_columns,
         engine          = engine,
-        schema          = 'CBB',
+        schema          = 'dbo',
         dry_run         = False
     )
-    
-#loadTeamInfo(engine, season)

@@ -147,8 +147,6 @@ def loadGameLines(engine, startDate, endDate):
         primary_keys    = pks,
         data_columns    = data_columns,
         engine          = engine,
-        schema          = 'CBB',
+        schema          = 'dbo',
         dry_run         = False
     )
-    
-#loadGameLines(engine, startDate, endDate)

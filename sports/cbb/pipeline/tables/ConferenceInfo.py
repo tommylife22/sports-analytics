@@ -73,8 +73,6 @@ def loadConferenceInfo(engine):
         primary_keys    = pks,
         data_columns    = data_columns,
         engine          = engine,
-        schema          = 'CBB',
+        schema          = 'dbo',
         dry_run         = False
     )
-    
-#loadConferenceInfo(engine)

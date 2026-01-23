@@ -12,7 +12,6 @@ from sports.cbb.pipeline.tables.GameBoxscorePlayer          import loadGameBoxsc
 from sports.cbb.pipeline.tables.GameBoxscoreTeam            import loadGameBoxscoreTeam
 from sports.cbb.pipeline.tables.GameInfo                    import loadGameInfo
 from sports.cbb.pipeline.tables.GameLines                   import loadGameLines
-from sports.cbb.pipeline.tables.GameESPNTeamWinProbability  import loadGameESPNTeamWinProbability
 from sports.cbb.pipeline.tables.TeamInfo                    import loadTeamInfo
 from sports.cbb.pipeline.tables.VenueInfo                   import loadVenueInfo
 from sports.cbb.pipeline.tables.PlayerInfo                  import loadPlayerInfo
@@ -29,18 +28,20 @@ def main():
     loadTeamInfo(engine, season)
     print("TeamInfo Done")
     #loadPlayerInfo(engine, season)
-    print("PlayerInfo Done")
-    #loadConferenceInfo(engine)
+    #print("PlayerInfo Done")
+    loadConferenceInfo(engine)
     print("ConferenceInfo Done")
-    #loadVenueInfo(engine)
+    loadVenueInfo(engine)
     print("VenueInfo Done")
     loadGameInfo(engine, startDate, endDate)
     print("GameInfo Done")
     loadGameBoxscoreTeam(engine, startDate, endDate)
     print("GameBoxscoreTeam Done")
-    loadGameBoxscorePlayer(engine, startDate, endDate)
-    print("GameBoxscorePlayer Done")
+    #loadGameBoxscorePlayer(engine, startDate, endDate)
+    #print("GameBoxscorePlayer Done")
     loadGameLines(engine, startDate, endDate)
     print("GameLines Done")
-    loadGameESPNTeamWinProbability(engine)
-    print("GameESPNTeamWinProbability Done")
+    
+if __name__ == "__main__":
+    
+    main()

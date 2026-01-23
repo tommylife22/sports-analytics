@@ -74,8 +74,6 @@ def loadVenueInfo(engine):
         primary_keys    = pks,
         data_columns    = data_columns,
         engine          = engine,
-        schema          = 'CBB',
+        schema          = 'dbo',
         dry_run         = False
     )
-    
-#loadVenueInfo(engine)

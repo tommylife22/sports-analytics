@@ -261,7 +261,7 @@ def upsert_via_staging(
         staging_table=staging_table,
         engine=engine,
         schema=schema,
-        if_exists="append",   # <-- append into fixed schema
+        if_exists="append",
     )
 
     # 3) Merge from staging into target
