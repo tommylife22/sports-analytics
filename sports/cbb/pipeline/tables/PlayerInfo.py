@@ -48,6 +48,7 @@ def cleanPlayerInfo(df: pd.DataFrame) -> pd.DataFrame:
     exploded = df[base_cols].explode("players", ignore_index=True)
 
     # 2) Flatten each player dict into columns
+    exploded = exploded[exploded["players"].notna()]
     players_flat = json_normalize(exploded["players"], sep=".")
 
     # Optional: clean column names like "bio.height" → "bioHeight"
@@ -69,10 +70,10 @@ def cleanPlayerInfo(df: pd.DataFrame) -> pd.DataFrame:
     
     out.rename(columns={'id':'playerId'},inplace=True)
     
-    for col in ['dateOfBirth','hometownCountry','hometownLatitude','hometownLongitude','hometownCountyFips']:
+    for col in ['dateOfBirth','hometownCity','hometownCountry','hometownLatitude','hometownLongitude','hometownCountyFips']:
         if col in out.columns:
-            out.drop(columns=[col],inplace=True,axis=1)
-            
+            out.drop([col],inplace=True,axis=1)
+
     return out
 
 def coercePlayerInfoDtypes(df: pd.DataFrame) -> pd.DataFrame:
@@ -135,8 +136,6 @@ def loadPlayerInfo(engine,season):
         primary_keys    = pks,
         data_columns    = data_columns,
         engine          = engine,
-        schema          = 'CBB',
+        schema          = 'dbo',
         dry_run         = False
     )
-
-#loadPlayerInfo(engine, season)

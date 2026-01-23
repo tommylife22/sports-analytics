@@ -1,3 +1,0 @@
-"""
-CBB Pipeline Utils Package
-"""

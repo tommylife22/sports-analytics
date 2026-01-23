@@ -198,6 +198,6 @@ def loadGameBoxscorePlayer(engine, startDate: date, endDate: date):
         primary_keys    = pks,
         data_columns    = data_columns,
         engine          = engine,
-        schema          = 'CBB',
+        schema          = 'dbo',
         dry_run         = False
     )
