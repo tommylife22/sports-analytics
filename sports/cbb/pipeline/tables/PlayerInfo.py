@@ -70,9 +70,7 @@ def cleanPlayerInfo(df: pd.DataFrame) -> pd.DataFrame:
     
     out.rename(columns={'id':'playerId'},inplace=True)
     
-    for col in ['dateOfBirth','hometownCity','hometownCountry','hometownLatitude','hometownLongitude','hometownCountyFips']:
-        if col in out.columns:
-            out.drop([col],inplace=True,axis=1)
+    out.drop(['dateOfBirth','hometownCountry','hometownLatitude','hometownLongitude','hometownCountyFips'],inplace=True,axis=1)
 
     return out
 
