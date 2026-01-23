@@ -50,6 +50,13 @@ def cleanGameLines(df: pd.DataFrame) -> pd.DataFrame:
     # If lines is a list, explode so each element becomes its own row
     exploded = base.explode("lines", ignore_index=True)
 
+    # Filter out rows where lines is NaN or not a dict
+    exploded = exploded[exploded["lines"].notna()]
+    exploded = exploded[exploded["lines"].apply(lambda x: isinstance(x, dict))]
+
+    if exploded.empty:
+        return pd.DataFrame()
+
     # Normalize the dicts in 'lines' into columns
     lines_flat = json_normalize(exploded["lines"])
 

@@ -94,6 +94,14 @@ def cleanTeamBoxscores(df: pd.DataFrame) -> pd.DataFrame:
     """
 
     base_cols = ["gameId", "teamId", "opponentId", "pace"]
+
+    # Filter out rows where teamStats is NaN or not a dict
+    df = df[df["teamStats"].notna()]
+    df = df[df["teamStats"].apply(lambda x: isinstance(x, dict))]
+
+    if df.empty:
+        return pd.DataFrame()
+
     base = df[base_cols].copy()
 
     # Expand teamStats dict → columns
