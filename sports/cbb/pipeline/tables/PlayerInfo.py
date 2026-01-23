@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from pandas import json_normalize
 
-from .functions import upsert_via_staging
+from .functions import upsert_via_staging, fix_col_name
 
 load_dotenv()
 
@@ -51,13 +51,8 @@ def cleanPlayerInfo(df: pd.DataFrame) -> pd.DataFrame:
     exploded = exploded[exploded["players"].notna()]
     players_flat = json_normalize(exploded["players"], sep=".")
 
-    # Optional: clean column names like "bio.height" → "bioHeight"
-    try:
-        from pipeline.tables.functions import fix_col_name
-        players_flat.columns = [fix_col_name(c) for c in players_flat.columns]
-    except ImportError:
-        # fallback if fix_col_name isn't available in this context
-        players_flat.columns = players_flat.columns.str.replace(r"\.", "_", regex=True)
+    # Clean column names: "hometown.city" → "hometownCity"
+    players_flat.columns = [fix_col_name(c) for c in players_flat.columns]
 
     # 3) Combine team/season keys with player columns
     out = pd.concat(
@@ -69,8 +64,10 @@ def cleanPlayerInfo(df: pd.DataFrame) -> pd.DataFrame:
     )
     
     out.rename(columns={'id':'playerId'},inplace=True)
-    
-    out.drop(['dateOfBirth','hometownCountry','hometownLatitude','hometownLongitude','hometownCountyFips'],inplace=True,axis=1)
+
+    # Drop columns if they exist (API schema may vary)
+    cols_to_drop = ['dateOfBirth', 'hometownCountry', 'hometownLatitude', 'hometownLongitude', 'hometownCountyFips']
+    out.drop(columns=[c for c in cols_to_drop if c in out.columns], inplace=True)
 
     return out
 

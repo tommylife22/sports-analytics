@@ -99,13 +99,21 @@ def cleanPlayerBoxscores(df: pd.DataFrame) -> pd.DataFrame:
     # 1) Keep just the columns we need and explode the list
     exploded = df[base_cols].explode("players", ignore_index=True)
 
-    # 2) Normalize the player dict into columns
+    # 2) Filter out rows where players is NaN or not a dict
+    exploded = exploded[exploded["players"].notna()]
+    exploded = exploded[exploded["players"].apply(lambda x: isinstance(x, dict))]
+
+    # Handle empty result
+    if exploded.empty:
+        return pd.DataFrame()
+
+    # 3) Normalize the player dict into columns
     player_stats = json_normalize(exploded["players"], sep=".")
 
-    # 3) Clean up column names (flatten "fieldGoals.made" → "fieldGoalsMade")
+    # 4) Clean up column names (flatten "fieldGoals.made" → "fieldGoalsMade")
     player_stats.columns = [fix_col_name(c) for c in player_stats.columns]
 
-    # 4) Combine game/team/opponent keys with player stats
+    # 5) Combine game/team/opponent keys with player stats
     out = pd.concat(
         [
             exploded[["gameId", "teamId", "opponentId"]].reset_index(drop=True),
